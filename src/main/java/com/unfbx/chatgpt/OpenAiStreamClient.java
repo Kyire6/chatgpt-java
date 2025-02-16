@@ -76,6 +76,11 @@ public class OpenAiStreamClient {
     @Getter
     private KeyStrategyFunction<List<String>, String> keyStrategy;
 
+    // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+    @Getter
+    private Boolean isAzureOpenApi;
+    // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+
     @Getter
     private OpenAiApi openAiApi;
 
@@ -115,14 +120,21 @@ public class OpenAiStreamClient {
             builder.authInterceptor = new DefaultOpenAiAuthInterceptor();
         }
         authInterceptor = builder.authInterceptor;
-        //设置apiKeys和key的获取策略
+        // 设置apiKeys和key的获取策略
         authInterceptor.setApiKey(this.apiKey);
         authInterceptor.setKeyStrategy(this.keyStrategy);
+
+        // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+        if (Objects.isNull(builder.isAzureOpenApi)) {
+            isAzureOpenApi = true;
+        }
+        isAzureOpenApi = builder.isAzureOpenApi;
+        // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
 
         if (Objects.isNull(builder.okHttpClient)) {
             builder.okHttpClient = this.okHttpClient();
         } else {
-            //自定义的okhttpClient  需要增加api keys
+            // 自定义的okhttpClient  需要增加api keys
             builder.okHttpClient = builder.okHttpClient
                     .newBuilder()
                     .addInterceptor(authInterceptor)
@@ -183,7 +195,7 @@ public class OpenAiStreamClient {
                     .url(this.apiHost + "v1/completions")
                     .post(RequestBody.create(MediaType.parse(ContentType.JSON.getValue()), requestBody))
                     .build();
-            //创建事件
+            // 创建事件
             EventSource eventSource = factory.newEventSource(request, eventSourceListener);
         } catch (JsonProcessingException e) {
             log.error("请求参数解析异常：{}", e);
@@ -229,10 +241,10 @@ public class OpenAiStreamClient {
             ObjectMapper mapper = new ObjectMapper();
             String requestBody = mapper.writeValueAsString(chatCompletion);
             Request request = new Request.Builder()
-                    .url(this.apiHost + "v1/chat/completions")
+                    .url(this.apiHost + (Boolean.TRUE.equals(this.isAzureOpenApi) ? "chat/completions" : "v1/chat/completions"))
                     .post(RequestBody.create(MediaType.parse(ContentType.JSON.getValue()), requestBody))
                     .build();
-            //创建事件
+            // 创建事件
             EventSource eventSource = factory.newEventSource(request, eventSourceListener);
         } catch (JsonProcessingException e) {
             log.error("请求参数解析异常：{}", e);
@@ -285,13 +297,13 @@ public class OpenAiStreamClient {
                 .description(plugin.getDescription())
                 .parameters(plugin.getParameters())
                 .build();
-        //没有值，设置默认值
+        // 没有值，设置默认值
         if (Objects.isNull(chatCompletion.getFunctionCall())) {
             chatCompletion.setFunctionCall("auto");
         }
-        //tip: 覆盖自己设置的functions参数，使用plugin构造的functions
+        // tip: 覆盖自己设置的functions参数，使用plugin构造的functions
         chatCompletion.setFunctions(Collections.singletonList(functions));
-        //调用OpenAi
+        // 调用OpenAi
         if (Objects.isNull(pluginEventSourceListener)) {
             pluginEventSourceListener = new DefaultPluginListener(this, eventSourceListener, plugin, chatCompletion);
         }
@@ -413,8 +425,8 @@ public class OpenAiStreamClient {
      *
      * @return Builder
      */
-    public static OpenAiStreamClient.Builder builder() {
-        return new OpenAiStreamClient.Builder();
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static final class Builder {
@@ -422,7 +434,7 @@ public class OpenAiStreamClient {
         /**
          * api请求地址，结尾处有斜杠
          *
-         * @see com.unfbx.chatgpt.constant.OpenAIConst
+         * @see OpenAIConst
          */
         private String apiHost;
 
@@ -436,6 +448,14 @@ public class OpenAiStreamClient {
          * api key的获取策略
          */
         private KeyStrategyFunction keyStrategy;
+
+        // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+        /**
+         * 是否使用 azure openapi 接口
+         * 默认 false
+         */
+        private Boolean isAzureOpenApi;
+        // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
 
         /**
          * 自定义鉴权拦截器
@@ -453,7 +473,7 @@ public class OpenAiStreamClient {
         /**
          * @param val api请求地址，结尾处有斜杠
          * @return Builder
-         * @see com.unfbx.chatgpt.constant.OpenAIConst
+         * @see OpenAIConst
          */
         public Builder apiHost(String val) {
             apiHost = val;
@@ -464,6 +484,13 @@ public class OpenAiStreamClient {
             keyStrategy = val;
             return this;
         }
+
+        // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+        public Builder isAzureOpenApi(Boolean val) {
+            isAzureOpenApi = val;
+            return this;
+        }
+        // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
 
         public Builder okHttpClient(OkHttpClient val) {
             okHttpClient = val;

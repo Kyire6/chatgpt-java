@@ -797,4 +797,24 @@ public interface OpenAiApi {
     Single<AssistantListResponse<RunStepResponse>> runSteps(@Path("thread_id") String threadId, @Path("run_id") String runId,
                                                             @Query("limit") Integer limit, @Query("order") String order, @Query("before") String before, @Query("after") String after);
 
+
+    // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+    /**
+     * 最新版的GPT-3.5 chat completion 更加贴近官方网站的问答模型
+     *
+     * @param chatCompletion chat completion
+     * @return 返回答案
+     */
+    @POST("chat/completions")
+    Single<ChatCompletionResponse> azureChatCompletion(@Body ChatCompletion chatCompletion);
+
+    /**
+     * 最新版的GPT-4 chat completion 支持图片输入
+     *
+     * @param chatCompletion chat completion
+     * @return 返回答案
+     */
+    @POST("chat/completions")
+    Single<ChatCompletionResponse> azureChatCompletionWithPicture(@Body ChatCompletionWithPicture chatCompletion);
+    // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
 }

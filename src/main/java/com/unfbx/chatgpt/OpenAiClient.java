@@ -110,6 +110,11 @@ public class OpenAiClient {
     @Getter
     private KeyStrategyFunction<List<String>, String> keyStrategy;
 
+    // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+    @Getter
+    private Boolean isAzureOpenApi;
+    // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+
     /**
      * 自定义鉴权处理拦截器<br/>
      * 可以不设置，默认实现：DefaultOpenAiAuthInterceptor <br/>
@@ -160,6 +165,13 @@ public class OpenAiClient {
         }
         keyStrategy = builder.keyStrategy;
 
+        // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+        if (Objects.isNull(builder.isAzureOpenApi)) {
+            isAzureOpenApi = true;
+        }
+        isAzureOpenApi = builder.isAzureOpenApi;
+        // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+
         if (Objects.isNull(builder.authInterceptor)) {
             builder.authInterceptor = new DefaultOpenAiAuthInterceptor();
         }
@@ -170,7 +182,7 @@ public class OpenAiClient {
         if (Objects.isNull(builder.okHttpClient)) {
             builder.okHttpClient = this.okHttpClient();
         } else {
-            //自定义的okhttpClient  需要增加api keys
+            // 自定义的okhttpClient  需要增加api keys
             builder.okHttpClient = builder.okHttpClient
                     .newBuilder()
                     .addInterceptor(authInterceptor)
@@ -514,7 +526,7 @@ public class OpenAiClient {
      * @return UploadFileResponse
      */
     public UploadFileResponse uploadFile(java.io.File file) {
-        //purpose 官网示例默认是：fine-tune
+        // purpose 官网示例默认是：fine-tune
         return this.uploadFile("fine-tune", file);
     }
 
@@ -697,10 +709,12 @@ public class OpenAiClient {
      */
     public <T extends BaseChatCompletion> ChatCompletionResponse chatCompletion(T chatCompletion) {
         if (chatCompletion instanceof ChatCompletion) {
-            Single<ChatCompletionResponse> chatCompletionResponse = this.openAiApi.chatCompletion((ChatCompletion) chatCompletion);
+            Single<ChatCompletionResponse> chatCompletionResponse = Boolean.TRUE.equals(this.isAzureOpenApi) ? this.openAiApi.azureChatCompletion((ChatCompletion) chatCompletion) :
+                    this.openAiApi.chatCompletion((ChatCompletion) chatCompletion);
             return chatCompletionResponse.blockingGet();
         }
-        Single<ChatCompletionResponse> chatCompletionResponse = this.openAiApi.chatCompletionWithPicture((ChatCompletionWithPicture) chatCompletion);
+        Single<ChatCompletionResponse> chatCompletionResponse = Boolean.TRUE.equals(this.isAzureOpenApi) ? this.openAiApi.azureChatCompletionWithPicture((ChatCompletionWithPicture) chatCompletion) :
+                this.openAiApi.chatCompletionWithPicture((ChatCompletionWithPicture) chatCompletion);
         return chatCompletionResponse.blockingGet();
     }
 
@@ -739,13 +753,13 @@ public class OpenAiClient {
                 .description(plugin.getDescription())
                 .parameters(plugin.getParameters())
                 .build();
-        //没有值，设置默认值
+        // 没有值，设置默认值
         if (Objects.isNull(chatCompletion.getFunctionCall())) {
             chatCompletion.setFunctionCall("auto");
         }
-        //tip: 覆盖自己设置的functions参数，使用plugin构造的functions
+        // tip: 覆盖自己设置的functions参数，使用plugin构造的functions
         chatCompletion.setFunctions(Collections.singletonList(functions));
-        //调用OpenAi
+        // 调用OpenAi
         ChatCompletionResponse functionCallChatCompletionResponse = this.chatCompletion(chatCompletion);
         ChatChoice chatChoice = functionCallChatCompletionResponse.getChoices().get(0);
         log.debug("构造的方法值：{}", chatChoice.getMessage().getFunctionCall());
@@ -759,7 +773,7 @@ public class OpenAiClient {
                 .build();
         messages.add(Message.builder().role(Message.Role.ASSISTANT).content("function_call").functionCall(functionCall).build());
         messages.add(Message.builder().role(Message.Role.FUNCTION).name(plugin.getFunction()).content(plugin.content(tq)).build());
-        //设置第二次，请求的参数
+        // 设置第二次，请求的参数
         chatCompletion.setFunctionCall(null);
         chatCompletion.setFunctions(null);
 
@@ -809,10 +823,10 @@ public class OpenAiClient {
      * @return 语音文本
      */
     public WhisperResponse speechToTextTranscriptions(java.io.File file, Transcriptions transcriptions) {
-        //文件
+        // 文件
         RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part multipartBody = MultipartBody.Part.createFormData("file", file.getName(), fileBody);
-        //自定义参数
+        // 自定义参数
         Map<String, RequestBody> requestBodyMap = new HashMap<>();
         if (StrUtil.isNotBlank(transcriptions.getLanguage())) {
             requestBodyMap.put(Transcriptions.Fields.language, RequestBody.create(MediaType.parse("multipart/form-data"), transcriptions.getLanguage()));
@@ -854,10 +868,10 @@ public class OpenAiClient {
      * @return 翻译后文本
      */
     public WhisperResponse speechToTextTranslations(java.io.File file, Translations translations) {
-        //文件
+        // 文件
         RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part multipartBody = MultipartBody.Part.createFormData("file", file.getName(), fileBody);
-        //自定义参数
+        // 自定义参数
         Map<String, RequestBody> requestBodyMap = new HashMap<>(5, 1L);
 
         if (StrUtil.isNotBlank(translations.getModel())) {
@@ -1450,6 +1464,14 @@ public class OpenAiClient {
          */
         private KeyStrategyFunction keyStrategy;
 
+        // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+        /**
+         * 是否使用 azure openapi 接口
+         * 默认 false
+         */
+        private Boolean isAzureOpenApi;
+        // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+
         /**
          * 自定义鉴权拦截器
          */
@@ -1477,6 +1499,13 @@ public class OpenAiClient {
             keyStrategy = val;
             return this;
         }
+
+        // update-begin-author:luo_jj date:20250216 for: 添加 azure openapi 接口
+        public Builder isAzureOpenApi(Boolean val) {
+            isAzureOpenApi = val;
+            return this;
+        }
+        // update-end-author:luo_jj date:20250216 for: 添加 azure openapi 接口
 
         public Builder okHttpClient(OkHttpClient val) {
             okHttpClient = val;
