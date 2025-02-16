@@ -155,6 +155,10 @@ public class BaseChatCompletion implements Serializable {
     @JsonProperty("top_logprobs")
     private Integer topLogprobs;
 
+    // update-begin-author:luo_jj date:20250214 for: 添加并行工具调用
+    @JsonProperty("parallel_tool_calls")
+    private Boolean parallelToolCalls;
+    // update-end-author:luo_jj date:20250214 for: 添加并行工具调用
 
     /**
      * 最新模型参考官方文档：
