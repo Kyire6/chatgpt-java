@@ -121,16 +121,27 @@
     </dependencies>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>unfbx</id> <!-- 此处id与setting.xml中的服务id保持一致 -->
-            <name>oss Snapshots Repository</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
+        <!-- <snapshotRepository> -->
+        <!--     <id>unfbx</id> &lt;!&ndash; 此处id与setting.xml中的服务id保持一致 &ndash;&gt; -->
+        <!--     <name>oss Snapshots Repository</name> -->
+        <!--     <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url> -->
+        <!-- </snapshotRepository> -->
+        <!-- <repository> -->
+        <!--     <id>unfbx</id> &lt;!&ndash; 此处id与setting.xml中的服务id保持一致 &ndash;&gt; -->
+        <!--     <name>oss Staging Repository</name> -->
+        <!--     <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url> -->
+        <!-- </repository> -->
         <repository>
-            <id>unfbx</id> <!-- 此处id与setting.xml中的服务id保持一致 -->
-            <name>oss Staging Repository</name>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <!--此id要与setting.xml里面server的id对应-->
+            <id>vansys</id>
+            <name>vansys Repository</name>
+            <url>https://mirrors.vxk8s.com/repository/maven-releases/</url>
         </repository>
+        <snapshotRepository>
+            <id>vansys-snapshots</id>
+            <name>vansys Snapshot Repository</name>
+            <url>https://mirrors.vxk8s.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
     </distributionManagement>
     <profiles>
         <profile>
